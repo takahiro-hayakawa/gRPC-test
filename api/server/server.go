@@ -16,7 +16,7 @@ import (
 
 func main() {
 	port := 50051
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -34,6 +34,5 @@ func main() {
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 	log.Println("stopping gRPC server...")
-	server.Gracefulstop()
-
+	server.GracefulStop()
 }
