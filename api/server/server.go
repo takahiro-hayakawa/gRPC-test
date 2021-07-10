@@ -1,7 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	grpcZap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"net"
 	"os"
@@ -21,7 +28,13 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	server := grpc.NewServer()
+	zapLogger, err := zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
+	grpcZap.ReplaceGrpcLoggerV2(zapLogger)
+
+	server := grpc.NewServer(grpc.UnaryInterceptor(grpcMiddleware.ChainUnaryServer(grpcZap.UnaryServerInterceptor(zapLogger), grpcAuth.UnaryServerInterceptor(auth))))
 	api.RegisterPancakeBakerServiceServer(server, handler.NewBakerHandler())
 	reflection.Register(server)
 
@@ -35,4 +48,17 @@ func main() {
 	<-quit
 	log.Println("stopping gRPC server...")
 	server.GracefulStop()
+}
+
+func auth(ctx context.Context) (context.Context, error) {
+	token, err := grpcAuth.AuthFromMD(ctx, "bearer")
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "hi/mi/tsu" {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid bearer token")
+	}
+
+	return context.WithValue(ctx, "UserName", "God"), nil
 }

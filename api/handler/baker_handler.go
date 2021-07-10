@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -41,6 +42,8 @@ func (h *BakerHandler) Bake(
 	ctx context.Context,
 	req *api.BakeRequest,
 ) (*api.BakeResponse, error) {
+	fmt.Printf("Baked a pancake for %v !\n", ctx.Value("UserName"))
+
 	//バリデーション
 	if req.Menu == api.Pancake_UNKNOWN || req.Menu > api.Pancake_SPICY_CURRY {
 		return nil, status.Errorf(codes.InvalidArgument, "パンケーキを選んでください！")

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"log"
 	"pancake/maker/gen/api"
 )
@@ -38,7 +39,10 @@ func (bakery *Bakery) bakePancake(menu string, c api.PancakeBakerServiceClient) 
 
 	req := &api.BakeRequest{Menu: bakery.pbMenu(menu)}
 
-	res, err := c.Bake(context.Background(), req)
+	md := metadata.New(map[string]string{"authorization": "bearer hi/mi/tsu"})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	res, err := c.Bake(ctx, req)
 	if err != nil {
 		log.Fatalf("error while calling bake: %v", err)
 	}
@@ -51,7 +55,10 @@ func (*Bakery) report(c api.PancakeBakerServiceClient) {
 
 	req := &api.ReportRequest{}
 
-	res, err := c.Report(context.Background(), req)
+	md := metadata.New(map[string]string{"authorization": "bearer hi/mi/tsu"})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	res, err := c.Report(ctx, req)
 	if err != nil {
 		log.Fatalf("error while calling report: %v", err)
 	}
@@ -60,6 +67,8 @@ func (*Bakery) report(c api.PancakeBakerServiceClient) {
 
 func main() {
 	var opts []grpc.DialOption
+
+	// セキュア通信設定
 	tls := false
 	if tls {
 	} else {
