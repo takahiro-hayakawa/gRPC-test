@@ -14,10 +14,29 @@ func NewBakery() *Bakery {
 	return &Bakery{}
 }
 
-func (*Bakery) bakePancake(c api.PancakeBakerServiceClient) {
+func (*Bakery) pbMenu(menu string) api.Pancake_Menu {
+	switch menu {
+	case "classic":
+		return api.Pancake_CLASSIC
+	case "banana_and_whip":
+		return api.Pancake_BANANA_AND_WHIP
+	case "bacon_and_cheese":
+		return api.Pancake_BANANA_AND_WHIP
+	case "mix_berry":
+		return api.Pancake_MINI_BERRY
+	case "baked_marshmallow":
+		return api.Pancake_BAKED_MARSHMALLOW
+	case "spicy_curry":
+		return api.Pancake_SPICY_CURRY
+	default:
+		return api.Pancake_UNKNOWN
+	}
+}
+
+func (bakery *Bakery) bakePancake(menu string, c api.PancakeBakerServiceClient) {
 	log.Println("Start bake")
 
-	req := &api.BakeRequest{Menu: api.Pancake_CLASSIC}
+	req := &api.BakeRequest{Menu: bakery.pbMenu(menu)}
 
 	res, err := c.Bake(context.Background(), req)
 	if err != nil {
@@ -55,6 +74,7 @@ func main() {
 
 	c := api.NewPancakeBakerServiceClient(cc)
 	bakery := NewBakery()
-	bakery.bakePancake(c)
+	bakery.bakePancake("classic", c)
+	bakery.bakePancake("banana_and_whip", c)
 	bakery.report(c)
 }
